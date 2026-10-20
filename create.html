@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create your wish – The Wisher's Wish</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@400;500;600&family=Pacifico&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120a24;--pink:#ff4d8d;--gold:#ffc857;--cyan:#5ce1e6;--text:#f6eeff;--mute:#b9a9d6;--glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,sans-serif;background:radial-gradient(circle at 15% 10%,#3a1668,transparent 50%),radial-gradient(circle at 90% 90%,#5a1646,transparent 50%),var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 6%}
+.logo{font-family:'Playfair Display',serif;font-weight:900;font-size:1.15rem}.logo span{color:var(--gold)}
+header a.x{color:var(--mute);font-size:.9rem}
+#bar{height:4px;background:var(--line);margin:0 6%;border-radius:4px;overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--gold));transition:width .5s}
+main{max-width:720px;margin:auto;padding:34px 6% 150px}
+.step{display:none}.step.on{display:block;animation:in .5s ease}
+@keyframes in{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+h1{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,5vw,2.5rem);margin-bottom:8px}
+.hint{color:var(--mute);margin-bottom:24px;font-size:.95rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.opt{background:var(--glass);border:1.5px solid var(--line);border-radius:18px;padding:16px 10px;text-align:center;cursor:pointer;transition:.25s;color:var(--text);font:inherit;font-size:.9rem}
+.opt:hover{transform:translateY(-5px) rotate(-1.5deg);border-color:var(--cyan)}
+.opt.sel{border-color:var(--pink);background:rgba(255,77,141,.18);box-shadow:0 0 24px rgba(255,77,141,.4)}
+.opt b{display:block;font-size:1.9rem;margin-bottom:4px}
+.sw{height:46px;border-radius:10px;margin-bottom:8px}
+input,textarea,select{width:100%;background:var(--glass);border:1.5px solid var(--line);border-radius:14px;padding:15px 18px;color:var(--text);font:inherit;font-size:1.1rem;outline:none;transition:.25s}
+input:focus,textarea:focus,select:focus{border-color:var(--pink);box-shadow:0 0 20px rgba(255,77,141,.3)}
+select option{background:#1c1038}
+textarea{min-height:130px;resize:vertical;font-size:1rem}
+.cnt{text-align:right;color:var(--mute);font-size:.8rem;margin-top:4px}
+.lab{display:block;color:var(--mute);font-size:.85rem;margin:16px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 16px;border-radius:30px;border:1.5px solid var(--line);background:var(--glass);color:var(--text);cursor:pointer;font:inherit;font-size:.88rem;transition:.2s}
+.chip.sel{background:var(--pink);border-color:var(--pink)}
+.auto{margin-top:18px;padding:18px;border-radius:18px;border:1.5px dashed var(--line);background:var(--glass)}
+.btn{padding:13px 30px;border-radius:50px;border:0;font:inherit;font-weight:600;cursor:pointer;transition:.3s;color:#fff}
+.main{background:linear-gradient(135deg,var(--pink),#ff8a4d);box-shadow:0 0 26px rgba(255,77,141,.5)}
+.main:hover:not(:disabled){transform:scale(1.05)}
+.main:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.ghost{background:var(--glass);border:1.5px solid var(--line)}
+.ghost:hover{border-color:var(--cyan)}
+footer{position:fixed;bottom:0;left:0;right:0;background:rgba(18,10,36,.85);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:12px 6%;z-index:5}
+.nav{max-width:720px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
+#pv{max-width:720px;margin:0 auto 10px;border-radius:14px;padding:9px 16px;display:flex;justify-content:space-between;align-items:center;font-size:1rem;transition:.5s;overflow:hidden;white-space:nowrap}
+#pv small{opacity:.75;font-size:.75rem;margin-left:10px}
+.res{text-align:center}
+.res .big{font-size:3.5rem;animation:bob 2s ease-in-out infinite;display:block}
+@keyframes bob{50%{transform:translateY(-10px) scale(1.1)}}
+.linkbox{display:flex;gap:8px;margin:20px 0}
+.linkbox input{font-size:.8rem}
+.acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#qr{display:inline-block;background:#fff;padding:14px;border-radius:16px;margin:22px 0 12px}
+#qr img{display:block}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:20}
+.err{color:var(--gold);font-size:.85rem;margin-top:10px}
+</style>
+</head>
+<body>
+<header><a href="index.html" class="logo">The Wisher’s <span>Wish</span></a><a href="index.html" class="x">Close ✕</a></header>
+<div id="bar"><i id="bi"></i></div>
+<canvas id="fx"></canvas>
+
+<main>
+  <div class="step" data-s="0"><h1>What are we celebrating?</h1><p class="hint">Pick one, or choose Custom to write your own.</p>
+    <div class="grid" id="gOcc"></div>
+    <input id="custom" placeholder="Type your occasion, e.g. Get Well Soon" maxlength="40" style="display:none;margin-top:16px"></div>
+  <div class="step" data-s="1"><h1>Who is this wish for?</h1><p class="hint">Their name will appear on the wish page.</p><input id="to" placeholder="Receiver’s name" maxlength="30"></div>
+  <div class="step" data-s="2"><h1>And your name?</h1><p class="hint">So they know who sent it.</p><input id="from" placeholder="Your name" maxlength="30"></div>
+  <div class="step" data-s="3"><h1>Pick a theme</h1><p class="hint">This changes the look. It works with every occasion.</p><div class="grid" id="gTheme"></div></div>
+  <div class="step" data-s="4"><h1>Choose an animation</h1><p class="hint">It plays when they open the wish.</p><div class="grid" id="gAnim"></div></div>
+  <div class="step" data-s="5"><h1>Write your message</h1><p class="hint">Write it yourself, or let us write it and edit it after.</p>
+    <textarea id="msg" placeholder="Your message…"></textarea><div class="cnt"><span id="cn">0</span>/300</div>
+    <div class="auto"><b>Auto-write for me</b>
+      <span class="lab">Who is it for?</span><div class="chips" id="cRel"></div>
+      <span class="lab">Tone</span><div class="chips" id="cTone"></div>
+      <span class="lab">Language</span><div class="chips" id="cLang"></div>
+      <button class="btn main" id="gen" style="margin-top:18px">✨ Write it for me</button></div></div>
+  <div class="step" data-s="6"><h1>Choose a font</h1><p class="hint">How should the message look?</p><div class="grid" id="gFont"></div></div>
+  <div class="step" data-s="7"><h1>Add a secret code?</h1><p class="hint">Optional. Only someone who knows the code can open the wish. Tell them the code yourself.</p><input id="code" placeholder="Secret code (leave empty to skip)" maxlength="20"></div>
+  <div class="step" data-s="8"><h1>When should it open?</h1><p class="hint">Optional. Before this time they will only see a countdown.</p><input type="datetime-local" id="open"><p class="err" id="oerr"></p></div>
+  <div class="step res" data-s="9"><span class="big">🎉</span><h1>Your wish is ready!</h1><p class="hint">Share this link. Every wish gets its own link.</p>
+    <div class="linkbox"><input id="lnk" readonly><button class="btn main" id="cp">Copy</button></div>
+    <div class="acts"><a class="btn main" id="wa" target="_blank" rel="noopener">Share on WhatsApp</a><a class="btn ghost" id="pr" target="_blank">Preview</a></div>
+    <div id="qr"></div><div><button class="btn ghost" id="dq">Download QR</button></div>
+    <p class="err" id="qe"></p><p class="hint" style="margin-top:18px"><a href="create.html" style="color:var(--cyan)">Make another wish</a></p></div>
+</main>
+
+<footer>
+  <div id="pv"></div>
+  <div class="nav"><button class="btn ghost" id="back">Back</button><button class="btn main" id="next">Next</button></div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const OCC=[['birthday','🎂','Birthday','Happy Birthday'],['anniversary','💍','Anniversary','Happy Anniversary'],['diwali','🪔','Diwali','Happy Diwali'],['newyear','🎆','New Year','Happy New Year'],['eid','🌙','Eid','Eid Mubarak'],['rakhi','🧵','Rakhi','Happy Raksha Bandhan'],['congrats','🏆','Congrats','Congratulations'],['luck','🍀','Good Luck','Good Luck'],['sorry','🥺','Sorry','I’m Sorry'],['custom','✍️','Custom','']];
+const TH={neon:['Neon Glow','linear-gradient(135deg,#0a0020,#3d0070)','#fff'],pastel:['Pastel Dream','linear-gradient(135deg,#ffd6e8,#d6e4ff)','#4a2a5e'],gold:['Royal Gold','linear-gradient(135deg,#2b1d00,#7a5a10)','#ffe9a8'],night:['Starry Night','linear-gradient(135deg,#020617,#1e2a6b)','#fff'],floral:['Floral Garden','linear-gradient(135deg,#0c3b2a,#8a2a55)','#fff'],party:['Confetti Party','linear-gradient(135deg,#ff4d8d,#ff9a3c,#5ce1e6)','#fff']};
+const AN=[['confetti','🎊','Confetti'],['balloons','🎈','Balloons'],['fireworks','🎆','Fireworks'],['hearts','💖','Hearts'],['stars','✨','Stars']];
+const FO={playfair:['Elegant',"'Playfair Display',serif"],script:['Script',"Pacifico,cursive"],clean:['Clean',"Poppins,sans-serif"],hand:['Handwritten',"Caveat,cursive"]};
+const REL=[['friend','Friend'],['partner','Partner'],['parent','Parent'],['sibling','Sibling'],['boss','Boss / Teacher'],['other','Someone else']];
+const TONE=[['simple','Simple'],['funny','Funny'],['emotional','Emotional'],['flirty','Flirty'],['formal','Formal']];
+const LANG=[['en','English'],['hi','हिन्दी'],['hg','Hinglish']];
+const MS={
+en:{simple:"Dear {to}, wishing you lots of love, happiness and everything beautiful today. May this day be as special as you are. – {from}",funny:"Hey {to}! Another reason to eat, laugh and pretend we are not getting older. Make it legendary! – {from}",emotional:"Dear {to}, you mean more to me than words can say. Thank you for being in my life. May happiness always find you. – {from}",flirty:"Hey {to}, you make every day feel like a celebration. Hope today is as gorgeous as you are. 😉 – {from}",formal:"Dear {to}, please accept my warm wishes on this occasion. I wish you good health, success and happiness. Regards, {from}"},
+hi:{simple:"प्रिय {to}, आपको ढेर सारा प्यार और खुशियाँ मिलें। आपका यह दिन बेहद खास हो। – {from}",funny:"{to}, चलो आज खूब हँसेंगे, खाएँगे और भूल जाएँगे कि उम्र बढ़ रही है! – {from}",emotional:"प्रिय {to}, आप मेरे लिए शब्दों से कहीं ज़्यादा मायने रखते हैं। हमेशा खुश रहिए। – {from}",flirty:"{to}, तुम्हारे साथ हर दिन जश्न जैसा लगता है। आज का दिन तुम जितना ही हसीन हो। 😉 – {from}",formal:"आदरणीय {to}, इस अवसर पर मेरी हार्दिक शुभकामनाएँ। आप स्वस्थ, सफल और प्रसन्न रहें। – {from}"},
+hg:{simple:"Dear {to}, aapko dher saara pyaar aur khushiyan mile. Aaj ka din bahut khaas ho. – {from}",funny:"Oye {to}! Aaj khoob khaenge, hasenge aur bhool jayenge ki umar badh rahi hai. Party pakki! – {from}",emotional:"Dear {to}, tum mere liye shabdon se kahin zyada ho. Hamesha khush rehna. – {from}",flirty:"Hey {to}, tumhare saath har din celebration jaisa lagta hai. Aaj ka din bhi tumhari tarah gorgeous ho. 😉 – {from}",formal:"Respected {to}, is avsar par meri hardik shubhkamnayein. Aap swasth, safal aur khush rahein. – {from}"}};
+const END={friend:"Dosti forever 🤝",partner:"Love you always ❤️",parent:"Aapke aashirwad ki zaroorat hai 🙏",sibling:"Best sibling ever! 🤗",boss:"Wishing you continued success.",other:""};
+
+const S={occ:'birthday',custom:'',to:'',from:'',theme:'neon',anim:'confetti',msg:'',font:'playfair',code:'',open:'',rel:'friend',tone:'simple',lang:'hg'};
+let step=0;const LAST=9;
+const $=id=>document.getElementById(id);
+
+function grid(id,list,key,html){const g=$(id);list.forEach(it=>{const b=document.createElement('button');b.className='opt';b.innerHTML=html(it);b.onclick=()=>{S[key]=it[0];[...g.children].forEach(c=>c.classList.toggle('sel',c===b));if(key==='occ')$('custom').style.display=it[0]==='custom'?'block':'none';render()};if(S[key]===it[0])b.classList.add('sel');g.appendChild(b)})}
+function chips(id,list,key){const g=$(id);list.forEach(it=>{const b=document.createElement('button');b.className='chip'+(S[key]===it[0]?' sel':'');b.textContent=it[1];b.onclick=()=>{S[key]=it[0];[...g.children].forEach(c=>c.classList.toggle('sel',c===b))};g.appendChild(b)})}
+grid('gOcc',OCC,'occ',o=>`<b>${o[1]}</b>${o[2]}`);
+grid('gTheme',Object.entries(TH).map(([k,v])=>[k,...v]),'theme',t=>`<div class="sw" style="background:${t[2]}"></div>${t[1]}`);
+grid('gAnim',AN,'anim',a=>`<b>${a[1]}</b>${a[2]}`);
+grid('gFont',Object.entries(FO).map(([k,v])=>[k,...v]),'font',f=>`<b style="font-family:${f[2]}">Aa</b>${f[1]}`);
+chips('cRel',REL,'rel');chips('cTone',TONE,'tone');chips('cLang',LANG,'lang');
+
+const head=()=>S.occ==='custom'?(S.custom.trim()||'Your occasion'):OCC.find(o=>o[0]===S.occ)[3];
+const emoji=()=>OCC.find(o=>o[0]===S.occ)[1];
+
+['custom','to','from','code','open'].forEach(k=>$(k).addEventListener('input',e=>{S[k]=e.target.value;render()}));
+$('msg').addEventListener('input',e=>{S.msg=e.target.value.slice(0,300);$('cn').textContent=S.msg.length;render()});
+$('gen').onclick=()=>{let t=S.tone;if(t==='flirty'&&!['partner','friend','other'].includes(S.rel))t='simple';
+  let m=MS[S.lang][t].replace('{to}',S.to||'Friend').replace('{from}',S.from||'Me');
+  const e=END[S.rel];if(e&&(m+' '+e).length<=300)m+=' '+e;
+  S.msg=m.slice(0,300);$('msg').value=S.msg;$('cn').textContent=S.msg.length;render()};
+
+function valid(){
+  if(step===0)return S.occ!=='custom'||S.custom.trim().length>1;
+  if(step===1)return S.to.trim().length>0;
+  if(step===2)return S.from.trim().length>0;
+  if(step===5)return S.msg.trim().length>0;
+  if(step===8&&S.open){const ok=new Date(S.open).getTime()>Date.now();$('oerr').textContent=ok?'':'Pick a time in the future, or clear the field to open right away.';return ok}
+  return true}
+function render(){
+  document.querySelectorAll('.step').forEach(s=>s.classList.toggle('on',+s.dataset.s===step));
+  $('bi').style.width=(step/LAST*100)+'%';
+  $('back').style.visibility=step===0||step===LAST?'hidden':'visible';
+  $('next').style.display=step===LAST?'none':'block';
+  $('next').textContent=step===8?'Create my wish 🎉':((step===7&&!S.code)||(step===8&&!S.open)?'Skip':'Next');
+  if(step===8)$('next').textContent='Create my wish 🎉';
+  $('next').disabled=!valid();
+  const t=TH[S.theme],pv=$('pv');pv.style.display=step===LAST?'none':'flex';
+  pv.style.background=t[1];pv.style.color=t[2];pv.style.fontFamily=FO[S.font][1];
+  pv.innerHTML=`<span>${emoji()} ${head()}, ${S.to.trim()||'Name'}!</span><small>${S.from.trim()?'– '+S.from.trim():''}</small>`;
+}
+const hash=s=>{let x=5381;for(const c of s)x=(x*33^c.charCodeAt(0))>>>0;return x.toString(36)};
+function build(){
+  const d={o:S.occ,e:emoji(),h:head(),to:S.to.trim(),fr:S.from.trim(),t:S.theme,a:S.anim,m:S.msg.trim(),f:S.font};
+  if(S.code.trim())d.c=hash(S.code.trim());
+  if(S.open)d.u=new Date(S.open).getTime();
+  const bytes=new TextEncoder().encode(JSON.stringify(d));let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));
+  return new URL('wish.html?d='+btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),location.href).href}
+function finish(){
+  const url=build();$('lnk').value=url;$('pr').href=url;
+  $('wa').href='https://wa.me/?text='+encodeURIComponent(`🎁 ${S.from.trim()} has sent you a special wish! Open it here: ${url}`+(S.code?`\n(You will need the secret code)`:''));
+  $('qr').innerHTML='';$('qe').textContent='';
+  try{new QRCode($('qr'),{text:url,width:200,height:200,correctLevel:QRCode.CorrectLevel.L})}catch(e){$('qr').style.display='none';$('dq').style.display='none';$('qe').textContent='The message is too long for a QR code. Shorten it to get a QR.'}
+  burst()}
+$('next').onclick=()=>{if(!valid())return;step++;if(step===LAST)finish();render();scrollTo(0,0);setTimeout(()=>{const i=document.querySelector('.step.on input,.step.on textarea');if(i&&window.innerWidth>700)i.focus()},300)};
+$('back').onclick=()=>{step--;render()};
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&step<LAST)$('next').click()});
+$('cp').onclick=()=>{$('lnk').select();(navigator.clipboard?navigator.clipboard.writeText($('lnk').value):Promise.reject()).catch(()=>document.execCommand('copy')).finally(()=>{$('cp').textContent='Copied ✓';setTimeout(()=>$('cp').textContent='Copy',1800)})};
+$('dq').onclick=()=>{const c=$('qr').querySelector('canvas');if(!c)return;const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='wish-qr.png';a.click()};
+
+// confetti burst
+const cv=$('fx'),cx=cv.getContext('2d');
+function burst(){cv.width=innerWidth;cv.height=innerHeight;const cols=['#ff4d8d','#ffc857','#5ce1e6','#b57bff','#ff8a4d'];
+  const P=Array.from({length:140},()=>({x:innerWidth/2,y:innerHeight*.45,vx:(Math.random()-.5)*16,vy:-Math.random()*15-3,c:cols[Math.random()*5|0],r:Math.random()*6,s:4+Math.random()*5}));
+  let f=0;(function go(){cx.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.2;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);cx.restore()});if(++f<130)requestAnimationFrame(go);else cx.clearRect(0,0,cv.width,cv.height)})()}
+render();
+</script>
+</body>
+</html>
