@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>A wish for you – The Wisher's Wish</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@400;500;600&family=Pacifico&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,sans-serif;min-height:100vh;background:#120a24;color:#f6eeff;overflow-x:hidden;background-size:200% 200%;animation:shift 14s ease infinite}
+@keyframes shift{50%{background-position:100% 100%}}
+canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#bg{z-index:0}#fx{z-index:3}
+main{position:relative;z-index:2;min-height:92vh;display:flex;align-items:center;justify-content:center;padding:40px 6%}
+.st{display:none;text-align:center;max-width:580px;width:100%}
+.st.on{display:block;animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:none}}
+.big{font-size:4.2rem;display:block;animation:bob 2.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px) scale(1.1)}}
+h1{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,6vw,3rem);line-height:1.2;margin:10px 0}
+.for{opacity:.85;margin-bottom:22px}
+.btn{display:inline-block;padding:13px 28px;border-radius:50px;border:0;font:inherit;font-weight:600;cursor:pointer;transition:.3s;color:#fff;text-decoration:none;margin:6px}
+.main{background:linear-gradient(135deg,#ff4d8d,#ff8a4d);box-shadow:0 0 26px rgba(255,77,141,.5)}
+.main:hover{transform:scale(1.05)}
+.ghost{background:rgba(255,255,255,.12);border:1.5px solid currentColor;color:inherit}
+.ghost:hover{transform:scale(1.05)}
+.cd{display:flex;gap:10px;justify-content:center;margin:22px 0}
+.cd div{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:14px 8px;min-width:68px;backdrop-filter:blur(8px)}
+.cd b{display:block;font-size:1.9rem;font-family:'Playfair Display',serif}
+.cd small{font-size:.7rem;opacity:.8}
+input{width:100%;max-width:300px;padding:14px 18px;border-radius:14px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:inherit;font:inherit;font-size:1.1rem;text-align:center;outline:none;margin-bottom:12px}
+input:focus{border-color:#ff4d8d;box-shadow:0 0 20px rgba(255,77,141,.4)}
+.shake{animation:sh .45s}
+@keyframes sh{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+#le{color:#ffc857;min-height:24px;font-size:.9rem;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.gift{font-size:7.5rem;background:none;border:0;cursor:pointer;animation:wob 1.6s ease-in-out infinite;filter:drop-shadow(0 0 30px rgba(255,200,87,.6));line-height:1}
+@keyframes wob{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg) scale(1.08)}}
+.gift.open{animation:op .6s forwards}
+@keyframes op{to{transform:scale(2.4) rotate(20deg);opacity:0}}
+#hd{background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 10px rgba(0,0,0,.25))}
+#msg{font-size:1.25rem;line-height:1.7;margin:20px 0 10px;min-height:120px;white-space:pre-wrap}
+.caret::after{content:'|';animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+#fr{font-size:1.2rem;margin-bottom:22px;font-weight:600}
+.ad{max-width:728px;margin:26px auto 0;height:90px;border:1.5px dashed rgba(255,255,255,.3);border-radius:14px;display:grid;place-items:center;font-size:.8rem;opacity:.6}
+footer{position:relative;z-index:2;text-align:center;padding:18px;font-size:.85rem;opacity:.8}
+footer a{color:inherit}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas><canvas id="fx"></canvas>
+<main>
+  <!-- error -->
+  <div class="st" id="err"><span class="big">😕</span><h1>This wish link isn’t working</h1><p class="for">The link may be incomplete or broken.</p><a class="btn main" href="create.html">Create your own wish</a></div>
+  <!-- countdown -->
+  <div class="st" id="cd"><span class="big">⏳</span><h1>This wish opens soon</h1><p class="for"></p><div class="cd"><div><b id="d">0</b><small>days</small></div><div><b id="h">0</b><small>hours</small></div><div><b id="m">0</b><small>mins</small></div><div><b id="s">0</b><small>secs</small></div></div><p id="when"></p></div>
+  <!-- secret code -->
+  <div class="st" id="lock"><span class="big">🔐</span><h1>Enter the secret code</h1><p class="for"></p><input id="code" placeholder="Secret code" autocomplete="off"><br><button class="btn main" id="go">Unlock</button><p id="le"></p></div>
+  <!-- gift -->
+  <div class="st" id="gift"><p class="for"></p><button class="gift" id="gb" aria-label="Open your wish">🎁</button><h1>Tap to open</h1></div>
+  <!-- the wish -->
+  <div class="st" id="wish"><span class="big" id="em"></span><h1 id="hd"></h1><p id="msg"></p><p id="fr"></p>
+    <button class="btn ghost" id="rp">↻ Replay animation</button><a class="btn main" href="create.html">Create your own wish</a>
+    <div class="ad">Advertisement</div></div>
+</main>
+<footer>© 2026 <a href="index.html">The Wisher’s Wish</a></footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+// theme: [background, text colour, heading gradient colours, floating emojis, direction (1 = falls, -1 = rises)]
+const TH={
+ neon:['linear-gradient(135deg,#0a0020,#3d0070)','#fff',['#ff4d8d','#5ce1e6'],['💜','✨','🔮'],-1],
+ pastel:['linear-gradient(135deg,#ffd6e8,#d6e4ff)','#4a2a5e',['#ff4d8d','#8a5cff'],['☁️','🌸','🕊️'],-1],
+ gold:['linear-gradient(135deg,#2b1d00,#7a5a10)','#ffe9a8',['#ffc857','#fff3c4'],['✨','⭐','🪙'],-1],
+ night:['linear-gradient(135deg,#020617,#1e2a6b)','#fff',['#9bb4ff','#ffffff'],['⭐','🌙','✨'],1],
+ floral:['linear-gradient(135deg,#0c3b2a,#8a2a55)','#fff',['#ff9ec7','#ffe27a'],['🌸','🌺','🌷'],1],
+ party:['linear-gradient(135deg,#ff4d8d,#ff9a3c,#5ce1e6)','#fff',['#ffffff','#fff3a0'],['🎈','🎉','⭐'],-1]};
+// fonts for the message
+const FO={playfair:"'Playfair Display',serif",script:'Pacifico,cursive',clean:'Poppins,sans-serif',hand:'Caveat,cursive'};
+// same hash function as create.html (for the secret code)
+const hash=s=>{let x=5381;for(const c of s)x=(x*33^c.charCodeAt(0))>>>0;return x.toString(36)};
+
+// 1. read and decode the link data
+let D=null,ci,ty;
+try{
+  let q=new URLSearchParams(location.search).get('d').replace(/-/g,'+').replace(/_/g,'/');
+  while(q.length%4)q+='=';
+  D=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(q),c=>c.charCodeAt(0))));
+  if(typeof D.to!=='string'||typeof D.m!=='string')throw 0;
+  D.to=D.to.slice(0,60);D.fr=String(D.fr||'').slice(0,60);D.m=D.m.slice(0,300);D.h=String(D.h||'Best Wishes').slice(0,60);D.e=String(D.e||'🎉').slice(0,8);
+  if(!TH[D.t])D.t='neon';if(!FO[D.f])D.f='playfair';
+}catch(e){D=null}
+
+function show(id){document.querySelectorAll('.st').forEach(s=>s.classList.toggle('on',s.id===id))}
+
+// background decoration + animation canvases
+const bg=$('bg'),bx=bg.getContext('2d'),fx=$('fx'),fc=fx.getContext('2d');let W,H,DC=[];
+function rs(){W=bg.width=fx.width=innerWidth;H=bg.height=fx.height=innerHeight}
+rs();addEventListener('resize',rs);
+
+if(!D){show('err')}else{
+  const T=TH[D.t];
+  document.title='A wish for '+D.to;
+  document.body.style.backgroundImage=T[0];
+  document.body.style.color=T[1];
+  document.body.style.setProperty('--c1',T[2][0]);document.body.style.setProperty('--c2',T[2][1]);
+  $('msg').style.fontFamily=FO[D.f];$('fr').style.fontFamily=FO[D.f];
+  document.querySelectorAll('.for').forEach(p=>p.textContent='A wish from '+(D.fr||'someone special')+' is waiting for '+D.to);
+  // floating emojis in the background
+  for(let i=0;i<(innerWidth<700?14:26);i++)DC.push({x:Math.random()*W,y:Math.random()*H,s:16+Math.random()*26,v:.25+Math.random()*.6,a:Math.random()*6,e:T[3][i%T[3].length]});
+  (function bgLoop(){
+    bx.clearRect(0,0,W,H);
+    DC.forEach(p=>{p.y+=p.v*T[4];p.a+=.02;if(p.y>H+40)p.y=-40;if(p.y<-40)p.y=H+40;
+      bx.globalAlpha=D.t==='night'?.3+.3*Math.sin(p.a*3):.4;bx.font=p.s+'px serif';bx.fillText(p.e,p.x+Math.sin(p.a)*14,p.y)});
+    if(!RM)requestAnimationFrame(bgLoop);
+  })();
+  next();
+}
+
+// 2. decide which screen to show: countdown, code, or gift
+function next(){
+  if(D.u&&D.u>Date.now())return startCd();
+  if(D.c)return show('lock');
+  show('gift');
+}
+function startCd(){
+  show('cd');$('when').textContent='Opens on '+new Date(D.u).toLocaleString();
+  const tick=()=>{const t=D.u-Date.now();
+    if(t<=0){clearInterval(ci);return next()}
+    $('d').textContent=Math.floor(t/864e5);$('h').textContent=Math.floor(t%864e5/36e5);
+    $('m').textContent=Math.floor(t%36e5/6e4);$('s').textContent=Math.floor(t%6e4/1e3)};
+  tick();ci=setInterval(tick,1000);
+}
+
+// 3. secret code check
+function check(){
+  if(hash($('code').value.trim())===D.c){show('gift')}
+  else{$('le').textContent='Wrong code, try again.';const c=$('lock');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake')}
+}
+$('go').onclick=check;
+$('code').addEventListener('keydown',e=>{if(e.key==='Enter')check()});
+
+// 4. gift box opens, wish appears
+$('gb').onclick=()=>{$('gb').classList.add('open');setTimeout(reveal,RM?0:550)};
+function reveal(){
+  show('wish');$('em').textContent=D.e;$('hd').textContent=D.h+', '+D.to+'!';
+  $('fr').textContent=D.fr?'– '+D.fr:'';
+  play();typeMsg();
+}
+function typeMsg(){
+  clearInterval(ty);const m=$('msg'),ch=Array.from(D.m);let i=0;m.textContent='';m.classList.add('caret');
+  ty=setInterval(()=>{m.textContent=ch.slice(0,++i).join('');if(i>=ch.length){clearInterval(ty);m.classList.remove('caret')}},RM?0:38);
+}
+$('rp').onclick=()=>{play();typeMsg()};
+
+// 5. celebration animations (drawn on canvas)
+const COL=['#ff4d8d','#ffc857','#5ce1e6','#b57bff','#ff8a4d'],R=Math.random;
+let P=[],raf;
+function play(){
+  cancelAnimationFrame(raf);P=[];if(RM)return;const t0=performance.now();
+  (function go(now){
+    const el=(now-t0)/1000;fc.clearRect(0,0,W,H);
+    if(el<9)spawn();
+    P=P.filter(p=>{
+      fc.globalAlpha=1;
+      if(p.k==='c'){p.x+=p.vx+Math.sin(p.y/30)*.6;p.y+=p.vy;p.r+=.15;
+        fc.save();fc.translate(p.x,p.y);fc.rotate(p.r);fc.fillStyle=p.c;fc.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);fc.restore();return p.y<H+20}
+      if(p.k==='b'){p.y+=p.vy;p.a+=.03;const x=p.x+Math.sin(p.a)*p.w;
+        fc.fillStyle=p.c;fc.globalAlpha=.85;fc.beginPath();fc.ellipse(x,p.y,p.s*.8,p.s,0,0,7);fc.fill();
+        fc.globalAlpha=.4;fc.strokeStyle='#fff';fc.beginPath();fc.moveTo(x,p.y+p.s);fc.quadraticCurveTo(x+8,p.y+p.s*1.6,x,p.y+p.s*2.2);fc.stroke();return p.y>-90}
+      if(p.k==='e'){p.y+=p.vy;p.a+=.03;fc.font=p.s+'px serif';fc.globalAlpha=.6+.4*Math.sin(p.a*4);fc.fillText(p.e,p.x+Math.sin(p.a)*22,p.y);return p.y>-50&&p.y<H+50}
+      p.vy+=.04;p.x+=p.vx;p.y+=p.vy;p.vx*=.985;p.l-=.012;fc.globalAlpha=Math.max(p.l,0);fc.fillStyle=p.c;fc.beginPath();fc.arc(p.x,p.y,2.6,0,7);fc.fill();return p.l>0;
+    });
+    if(el<9||P.length)raf=requestAnimationFrame(go);else fc.clearRect(0,0,W,H);
+  })(t0);
+}
+function spawn(){
+  const a=D.a;
+  if(a==='confetti')for(let i=0;i<3;i++)P.push({k:'c',x:R()*W,y:-10,vx:(R()-.5)*2,vy:2+R()*3,r:R()*6,s:6+R()*7,c:COL[R()*5|0]});
+  else if(a==='balloons'){if(R()<.07)P.push({k:'b',x:R()*W,y:H+60,vy:-(1+R()*1.8),w:R()*6,a:R()*6,s:24+R()*18,c:COL[R()*5|0]})}
+  else if(a==='hearts'){if(R()<.18)P.push({k:'e',e:['💖','❤️','💕','💗'][R()*4|0],x:R()*W,y:H+30,vy:-(1+R()*2),a:R()*6,s:22+R()*26})}
+  else if(a==='stars'){if(R()<.25)P.push({k:'e',e:['⭐','✨','🌟'][R()*3|0],x:R()*W,y:-30,vy:1+R()*2,a:R()*6,s:18+R()*24})}
+  else if(a==='fireworks'){if(R()<.04){const cx=W*(.15+R()*.7),cy=H*(.12+R()*.4),c=COL[R()*5|0];
+    for(let i=0;i<70;i++){const an=i/70*6.283,sp=2+R()*4;P.push({k:'f',x:cx,y:cy,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp,l:1,c})}}}
+}
+</script>
+</body>
+</html>
