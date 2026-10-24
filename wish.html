@@ -94,7 +94,7 @@ input{width:100%;max-width:300px;padding:14px 18px;border-radius:14px;border:1.5
   <div class="st" id="ch"><span class="big">🎁</span><h1 id="c1"></h1><p class="for" id="c2"></p><div class="cards"><button class="cc" id="ck"><b>💌</b>Ek khat</button><button class="cc" id="cf"><b>💐</b>Kuch phool</button></div></div>
   <div class="st" id="kh"><div class="paper"><p id="lh"></p><p id="msg"></p><p id="fr"></p></div><button class="btn main rv" id="kn"></button></div>
   <div class="st" id="fl"><span class="bloom">💐</span><h1 id="ft"></h1><button class="btn main" id="fn"></button></div>
-  <div class="st" id="end"><span class="big" id="em2"></span><h1 id="hd2"></h1><p class="for" id="fin"></p><p id="fr2" style="font-weight:600;margin-bottom:14px"></p>
+  <div class="st" id="end"><span class="big" id="em2"></span><h1 id="hd2"></h1><p class="for" id="fin"></p><p class="for" id="rmn" style="display:none;font-size:.8rem">Animations are turned down on your device. Tap Replay to watch them.</p><p id="fr2" style="font-weight:600;margin-bottom:14px"></p>
     <button class="btn ghost" id="rp">↻ Replay</button><button class="btn ghost" id="rl">💌 Read the letter</button><a class="btn main" href="create.html">Create your own wish</a><div class="ad">Advertisement</div><p class="for" style="font-size:.8rem;margin:14px 0 0">Made by ~TheAditya</p></div>
 </main>
 
@@ -161,8 +161,8 @@ let night=false;
 (function bgLoop(){bx.clearRect(0,0,W,H);DC.forEach(p=>{p.y+=p.v*th[4];p.a+=.02;if(p.y>H+40)p.y=-40;if(p.y<-40)p.y=H+40;
   bx.globalAlpha=night?.3+.3*Math.sin(p.a*3):.4;bx.font=p.s+'px serif';bx.fillText(p.e,p.x+Math.sin(p.a)*14,p.y)});if(!RM)requestAnimationFrame(bgLoop)})();
 const COL=['#ff4d8d','#ffc857','#5ce1e6','#b57bff','#ff8a4d'];let P=[],raf;
-function play(a){
-  cancelAnimationFrame(raf);P=[];if(RM)return;const t0=performance.now();
+function play(a,force){
+  cancelAnimationFrame(raf);P=[];if(RM&&!force)return;const t0=performance.now();
   (function go(now){const el=(now-t0)/1000;fc.clearRect(0,0,W,H);if(el<9)spawn(a);
     P=P.filter(p=>{fc.globalAlpha=1;
       if(p.k==='c'){p.x+=p.vx+Math.sin(p.y/30)*.6;p.y+=p.vy;p.r+=.15;fc.save();fc.translate(p.x,p.y);fc.rotate(p.r);fc.fillStyle=p.c;fc.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);fc.restore();return p.y<H+20}
@@ -303,8 +303,8 @@ function sKh(ret){
 }
 // 7. finale
 function sEnd(){
-  show('end');$('em2').textContent=OCC()[0];$('hd2').textContent=HEAD()+', '+D.to+'!';$('fin').textContent=T('fin');$('fr2').textContent=D.fr?'– '+D.fr:'';
-  play(D.a);$('rp').onclick=()=>play(D.a);$('rl').onclick=()=>sKh(()=>{show('end');play(D.a)});
+  show('end');$('em2').textContent=OCC()[0];$('hd2').textContent=HEAD()+', '+D.to+'!';$('fin').textContent=T('fin');$('rmn').style.display=RM?'block':'none';$('fr2').textContent=D.fr?'– '+D.fr:'';
+  play(D.a);$('rp').onclick=()=>play(D.a,true);$('rl').onclick=()=>sKh(()=>{show('end');play(D.a)});
 }
 </script>
 </body>
