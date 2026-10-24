@@ -79,6 +79,7 @@ input{width:100%;max-width:300px;padding:14px 18px;border-radius:14px;border:1.5
 <canvas id="bg"></canvas><canvas id="fx"></canvas>
 <main>
   <div class="st" id="demo"><span class="big">🎁</span><h1>The Wisher’s Wish</h1><p class="for">No wish link found. Try a demo:</p><div class="dm" id="dm"></div><a class="btn main" href="create.html">Create your own wish</a></div>
+  <div class="st" id="off"><span class="big">🔒</span><h1>This wish is switched off</h1><p class="for">The sender or the website has turned this link off.</p><a class="btn main" href="create.html">Create a wishing web page</a></div>
   <div class="st" id="bad"><span class="big">😕</span><h1>This wish link isn’t working</h1><p class="for">The link may be incomplete or broken.</p><a class="btn main" href="create.html">Create your own wish</a></div>
   <div class="st" id="cd"><span class="big">⏳</span><h1>This wish opens soon</h1><p class="for fo"></p><div class="cd"><div><b id="d">0</b><small>days</small></div><div><b id="h">0</b><small>hours</small></div><div><b id="m">0</b><small>mins</small></div><div><b id="s">0</b><small>secs</small></div></div><p id="when"></p></div>
   <div class="st" id="lock"><span class="big">🔐</span><h1>Enter the secret code</h1><p class="for fo"></p><input id="code" placeholder="Secret code" autocomplete="off"><br><button class="btn main" id="go">Unlock</button><p id="le2"></p></div>
@@ -94,10 +95,14 @@ input{width:100%;max-width:300px;padding:14px 18px;border-radius:14px;border:1.5
   <div class="st" id="kh"><div class="paper"><p id="lh"></p><p id="msg"></p><p id="fr"></p></div><button class="btn main rv" id="kn"></button></div>
   <div class="st" id="fl"><span class="bloom">💐</span><h1 id="ft"></h1><button class="btn main" id="fn"></button></div>
   <div class="st" id="end"><span class="big" id="em2"></span><h1 id="hd2"></h1><p class="for" id="fin"></p><p id="fr2" style="font-weight:600;margin-bottom:14px"></p>
-    <button class="btn ghost" id="rp">↻ Replay</button><button class="btn ghost" id="rl">💌 Read the letter</button><a class="btn main" href="create.html">Create your own wish</a><div class="ad">Advertisement</div></div>
+    <button class="btn ghost" id="rp">↻ Replay</button><button class="btn ghost" id="rl">💌 Read the letter</button><a class="btn main" href="create.html">Create your own wish</a><div class="ad">Advertisement</div><p class="for" style="font-size:.8rem;margin:14px 0 0">Made by ~TheAditya</p></div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
 <script>
+// your Supabase project (safe to keep in the website)
+const SB_URL='https://thzgyqgybahbnbkdqexd.supabase.co',SB_KEY='sb_publishable_54JjRffHZ9yv7J5eIaX5Gg_etJgfKvn';
+let _sb;function sb(){if(!_sb)_sb=supabase.createClient(SB_URL,SB_KEY);return _sb}
 const $=id=>document.getElementById(id),R=Math.random,RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
 // ---------- data tables ----------
 // theme: [background, text colour, heading gradient, floating emojis, direction (1 falls, -1 rises)]
@@ -181,10 +186,22 @@ const DEMOS=[
  ['👻 Friend: horror prank',{g:'f',o:'friend',to:'Kabir',fr:'Dev',t:'night',a:'stars',f:'clean',w:'h',m:'Tension mat le, sab prank tha. Party teri taraf se!'}],
  ['🪔 Diwali (festival group)',{g:'p',o:'diwali',to:'Sharma Ji',fr:'Aditya',t:'gold',a:'fireworks',f:'playfair',m:'May this Diwali fill your home with light, joy and prosperity.'}]];
 (async()=>{
-  const q=new URLSearchParams(location.search).get('d');
+  const sp=new URLSearchParams(location.search),q=sp.get('d'),wid=sp.get('w');
   theme('neon');
+  // saved wish (short link): ask the database, it tells us if the link is on or off
+  if(wid){
+    try{const r=await sb().rpc('get_wish',{wid});if(r.error)throw r.error;
+      if(r.data&&r.data.status==='ok')return begin(clean(r.data.data));
+      return show(r.data&&r.data.status==='missing'?'bad':'off')}
+    catch(e){return show('bad')}
+  }
   if(!q){DEMOS.forEach(d=>{const b=document.createElement('button');b.className='btn ghost';b.textContent=d[0];b.onclick=()=>begin(clean(d[1]),true);$('dm').appendChild(b)});return show('demo')}
-  try{begin(clean(await decode(q)))}catch(e){show('bad')}
+  try{
+    const d=clean(await decode(q));
+    // old-style links: only the global kill switch applies (if the check fails, the wish still opens)
+    try{const r=await sb().rpc('links_enabled');if(r.data===false)return show('off')}catch(e){}
+    begin(d);
+  }catch(e){show('bad')}
 })();
 function begin(d,demo){
   D=d;theme(D.t);night=D.t==='night';document.title='A wish for '+D.to;
