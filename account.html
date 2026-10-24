@@ -54,7 +54,7 @@ input:focus{border-color:var(--pink);box-shadow:0 0 20px rgba(255,77,141,.3)}
     <p class="hint" style="margin-top:18px;text-align:center"><a href="create.html" style="color:var(--cyan)">Continue without login</a></p>
   </section>
   <section id="dash" hidden>
-    <div class="top"><div><h1>My wishes</h1><p class="hint" id="who" style="margin:0"></p></div><div class="acts"><a class="btn main sm" href="create.html">+ New wish</a><button class="btn ghost sm" id="out">Logout</button></div></div>
+    <div class="top"><div><h1>My wishes</h1><p class="hint" id="who" style="margin:0"></p></div><div class="acts"><a class="btn main sm" href="create.html">+ New wish</a><a class="btn ghost sm" id="adm" href="admin.html" hidden>Admin panel</a><button class="btn ghost sm" id="out">Logout</button></div></div>
     <p class="err" id="de"></p>
     <div id="list"></div>
     <p class="hint" id="empty" hidden>No saved wishes yet. Create one while you are logged in and it will show up here.</p>
@@ -100,7 +100,9 @@ $('out').onclick=async()=>{await sb.auth.signOut();show('auth')};
 
 // ---- dashboard ----
 async function dash(session){
-  show('dash');$('who').textContent=session.user.email;await load();
+  show('dash');$('who').textContent=session.user.email;
+  try{const p=await sb.from('profiles').select('is_admin').eq('id',session.user.id).single();$('adm').hidden=!(p.data&&p.data.is_admin)}catch(e){}
+  await load();
 }
 const fmt=t=>new Date(t).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
 function badge(t,c){const s=document.createElement('span');s.className='b '+c;s.textContent=t;return s}
