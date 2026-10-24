@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin – The Wisher's Wish</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120a24;--pink:#ff4d8d;--gold:#ffc857;--cyan:#5ce1e6;--text:#f6eeff;--mute:#b9a9d6;--glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,sans-serif;background:radial-gradient(circle at 15% 10%,#3a1668,transparent 50%),radial-gradient(circle at 90% 90%,#5a1646,transparent 50%),var(--bg);background-attachment:fixed;color:var(--text);min-height:100vh}
+a{color:inherit;text-decoration:none}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 5%;gap:10px;flex-wrap:wrap}
+.logo{font-family:'Playfair Display',serif;font-weight:900;font-size:1.15rem}.logo span{color:var(--gold)}
+.tag{font-size:.7rem;background:var(--pink);padding:3px 10px;border-radius:20px;margin-left:8px;vertical-align:middle}
+main{max-width:980px;margin:auto;padding:10px 5% 80px}
+h1{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,4.5vw,2.3rem);margin-bottom:6px}
+h2{font-size:1.1rem;margin-bottom:10px}
+.hint{color:var(--mute);font-size:.9rem;margin-bottom:18px}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:18px}
+input{width:100%;background:var(--glass);border:1.5px solid var(--line);border-radius:14px;padding:13px 16px;color:var(--text);font:inherit;outline:none;margin-bottom:12px}
+input:focus{border-color:var(--pink)}
+.btn{display:inline-block;padding:11px 24px;border-radius:50px;border:0;font:inherit;font-weight:600;cursor:pointer;transition:.3s;color:#fff}
+.main{background:linear-gradient(135deg,var(--pink),#ff8a4d)}.main:hover:not(:disabled){transform:scale(1.04)}
+.ghost{background:var(--glass);border:1.5px solid var(--line)}.ghost:hover:not(:disabled){border-color:var(--cyan)}
+.danger{background:#d93a52}.danger:hover:not(:disabled){transform:scale(1.04)}
+.btn:disabled{opacity:.4;cursor:not-allowed}.sm{padding:7px 15px;font-size:.8rem}
+.err{color:var(--gold);font-size:.88rem;min-height:20px;margin:4px 0 10px}
+.tabs{display:flex;gap:8px;margin:6px 0 18px;flex-wrap:wrap}
+.tab{padding:9px 20px;border-radius:30px;border:1.5px solid var(--line);background:var(--glass);color:var(--text);font:inherit;cursor:pointer}
+.tab.sel{background:var(--pink);border-color:var(--pink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:center}
+.stat b{display:block;font-family:'Playfair Display',serif;font-size:2rem}.stat small{color:var(--mute)}
+.kill{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.kill.off{border-color:#ff5050;background:rgba(255,80,80,.1)}
+.row{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:10px}
+.row h3{font-size:1rem;margin-bottom:2px}.row small{color:var(--mute);word-break:break-all}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.b{font-size:.72rem;padding:3px 11px;border-radius:20px;border:1px solid var(--line)}
+.on{background:rgba(60,220,140,.18);border-color:#3cdc8c;color:#9dffcc}.off{background:rgba(255,255,255,.08);color:var(--mute)}.bad{background:rgba(255,80,80,.18);border-color:#ff5050;color:#ffb0b0}.op{background:rgba(92,225,230,.15);border-color:var(--cyan);color:var(--cyan)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><a href="index.html" class="logo">The Wisher’s <span>Wish</span><span class="tag">ADMIN</span></a><div class="acts"><a class="btn ghost sm" href="account.html">My wishes</a><button class="btn ghost sm" id="out" hidden>Logout</button></div></header>
+<main>
+  <section id="login" hidden><h1>Admin login</h1><p class="hint">Only the website owner can use this page.</p>
+    <div class="card"><input id="em" type="email" placeholder="Email"><input id="pw" type="password" placeholder="Password"><p class="err" id="le"></p><button class="btn main" id="go">Login</button></div></section>
+  <section id="deny" hidden><h1>Not allowed</h1><p class="hint">This account is not an admin. You can still use <a href="account.html" style="color:var(--cyan)">My wishes</a>.</p></section>
+  <section id="app" hidden>
+    <h1>Admin panel</h1><p class="hint" id="me"></p><p class="err" id="ae"></p>
+    <div class="tabs"><button class="tab sel" data-t="ov">Overview</button><button class="tab" data-t="ws">Wishes</button><button class="tab" data-t="us">Users</button><button class="tab" id="rf">↻ Refresh</button></div>
+    <div id="ov">
+      <div class="stats" id="stats"></div>
+      <div class="card kill" id="kill"><div><h2 id="kt"></h2><p class="hint" id="kd" style="margin:0"></p></div><button class="btn danger" id="kb"></button></div>
+    </div>
+    <div id="ws" hidden><input id="q" placeholder="Search by name, owner email or wish ID…"><div id="wl"></div></div>
+    <div id="us" hidden><div id="ul"></div></div>
+  </section>
+  <p class="hint" style="text-align:center;margin-top:40px;font-size:.8rem">Made by ~TheAditya</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
+<script>
+const SB_URL='https://thzgyqgybahbnbkdqexd.supabase.co';
+const SB_KEY='sb_publishable_54JjRffHZ9yv7J5eIaX5Gg_etJgfKvn';
+const $=id=>document.getElementById(id);
+let sb,USERS=[],WISHES=[],LINKS_ON=true;
+try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){}
+const fmt=t=>t?new Date(t).toLocaleString([], {dateStyle:'medium',timeStyle:'short'}):'-';
+function show(w){['login','deny','app'].forEach(x=>$(x).hidden=x!==w);$('out').hidden=w==='login'}
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+function badge(t,c){return el('span','b '+c,t)}
+function btn(t,cls,fn){const b=el('button','btn '+cls+' sm',t);b.onclick=fn;return b}
+const err=m=>{$('ae').textContent=m||''};
+
+// ---- login and the admin check (the database itself also blocks non-admins) ----
+async function init(){
+  if(!sb){show('login');$('le').textContent='Could not load the login system. Refresh the page.';return}
+  const {data}=await sb.auth.getSession();data.session?gate(data.session):show('login');
+}
+async function gate(session){
+  const p=await sb.from('profiles').select('is_admin').eq('id',session.user.id).single();
+  if(p.error||!p.data||!p.data.is_admin){show('deny');return}
+  $('me').textContent='Logged in as '+session.user.email;show('app');await refresh();
+}
+async function login(){
+  $('le').textContent='';const r=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});
+  if(r.error)$('le').textContent=r.error.message;else gate(r.data.session);
+}
+$('go').onclick=login;$('pw').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+$('out').onclick=async()=>{await sb.auth.signOut();show('login')};
+
+// ---- load everything ----
+async function refresh(){
+  err('');
+  const [st,us,ws]=await Promise.all([
+    sb.from('settings').select('value').eq('key','all_links').single(),
+    sb.from('profiles').select('id,email,is_admin,is_blocked,created_at').order('created_at',{ascending:false}),
+    sb.from('wishes').select('id,user_id,data,enabled,disabled_by_admin,views,opened_at,created_at').order('created_at',{ascending:false}).limit(500)]);
+  if(us.error||ws.error||st.error){err('Could not load data: '+((us.error||ws.error||st.error).message));return}
+  LINKS_ON=!(st.data&&st.data.value&&st.data.value.enabled===false);USERS=us.data;WISHES=ws.data;
+  drawOverview();drawWishes();drawUsers();
+}
+const owner=id=>(USERS.find(u=>u.id===id)||{}).email||'unknown';
+
+// ---- overview + the kill switch ----
+function drawOverview(){
+  const box=$('stats');box.innerHTML='';
+  const live=WISHES.filter(w=>w.enabled&&!w.disabled_by_admin).length,views=WISHES.reduce((n,w)=>n+w.views,0);
+  [[USERS.length,'Users'],[WISHES.length,'Saved wishes'],[live,'Links ON'],[views,'Total views']].forEach(([n,l])=>{const s=el('div','stat');s.appendChild(el('b','',n));s.appendChild(el('small','',l));box.appendChild(s)});
+  $('kill').classList.toggle('off',!LINKS_ON);
+  $('kt').textContent=LINKS_ON?'All links are ON':'ALL LINKS ARE OFF';
+  $('kd').textContent=LINKS_ON?'Anyone with a link can open their wish.':'Every wish link, old and new, now shows only “Create a wishing web page”.';
+  $('kb').textContent=LINKS_ON?'Switch OFF all links':'Switch ON all links';
+  $('kb').className='btn '+(LINKS_ON?'danger':'main');
+}
+$('kb').onclick=async()=>{
+  const turnOff=LINKS_ON;
+  if(!confirm(turnOff?'Switch OFF every wish link on the website? Nobody will be able to open any wish until you switch it back ON.':'Switch all links back ON?'))return;
+  const r=await sb.from('settings').update({value:{enabled:!turnOff}}).eq('key','all_links');
+  if(r.error)err(r.error.message);await refresh();
+};
+
+// ---- wishes ----
+function drawWishes(){
+  const q=$('q').value.trim().toLowerCase(),box=$('wl');box.innerHTML='';
+  const list=WISHES.filter(w=>!q||[w.id,owner(w.user_id),(w.data||{}).to,(w.data||{}).fr].join(' ').toLowerCase().includes(q));
+  if(!list.length)box.appendChild(el('p','hint','No wishes found.'));
+  list.forEach(w=>{
+    const d=w.data||{},url=new URL('wish.html?w='+w.id,location.href).href,c=el('div','row');
+    c.appendChild(el('h3','','For '+(d.to||'someone')+(d.fr?' · from '+d.fr:'')));
+    c.appendChild(el('small','','Owner: '+owner(w.user_id)+' · ID: '+w.id+' · '+fmt(w.created_at)));
+    const bs=el('div','badges');
+    if(w.disabled_by_admin)bs.appendChild(badge('Off by admin','bad'));else bs.appendChild(w.enabled?badge('ON','on'):badge('Off by owner','off'));
+    bs.appendChild(w.views>0?badge(w.views+' view'+(w.views>1?'s':'')+' · first '+fmt(w.opened_at),'op'):badge('Not opened','off'));
+    c.appendChild(bs);
+    const a=el('div','acts');
+    a.appendChild(btn(w.disabled_by_admin?'Switch back on':'Switch off','ghost',async()=>{const r=await sb.from('wishes').update({disabled_by_admin:!w.disabled_by_admin}).eq('id',w.id);if(r.error)err(r.error.message);await refresh()}));
+    const o=el('a','btn ghost sm','Open');o.href=url;o.target='_blank';a.appendChild(o);
+    a.appendChild(btn('Delete','ghost',async()=>{if(!confirm('Delete this wish for good?'))return;const r=await sb.from('wishes').delete().eq('id',w.id);if(r.error)err(r.error.message);await refresh()}));
+    c.appendChild(a);box.appendChild(c);
+  });
+}
+$('q').addEventListener('input',drawWishes);
+
+// ---- users ----
+function drawUsers(){
+  const box=$('ul');box.innerHTML='';
+  USERS.forEach(u=>{
+    const n=WISHES.filter(w=>w.user_id===u.id).length,c=el('div','row');
+    c.appendChild(el('h3','',u.email||'(no email)'));c.appendChild(el('small','','Joined '+fmt(u.created_at)+' · '+n+' wish'+(n===1?'':'es')));
+    const bs=el('div','badges');if(u.is_admin)bs.appendChild(badge('Admin','op'));bs.appendChild(u.is_blocked?badge('Blocked','bad'):badge('Active','on'));c.appendChild(bs);
+    const b=btn(u.is_blocked?'Unblock user':'Block user','ghost',async()=>{
+      if(!u.is_blocked&&!confirm('Block '+u.email+'? Their saved links will stop working and they cannot save new wishes.'))return;
+      const r=await sb.from('profiles').update({is_blocked:!u.is_blocked}).eq('id',u.id);if(r.error)err(r.error.message);await refresh()});
+    b.disabled=u.is_admin;c.appendChild(b);box.appendChild(c);
+  });
+}
+
+// ---- tabs ----
+document.querySelectorAll('.tab[data-t]').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab[data-t]').forEach(x=>x.classList.toggle('sel',x===t));
+  ['ov','ws','us'].forEach(id=>$(id).hidden=id!==t.dataset.t);
+});
+$('rf').onclick=refresh;
+init();
+</script>
+</body>
+</html>
