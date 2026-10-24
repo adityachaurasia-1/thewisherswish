@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login – The Wisher's Wish</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120a24;--pink:#ff4d8d;--gold:#ffc857;--cyan:#5ce1e6;--text:#f6eeff;--mute:#b9a9d6;--glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.14)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Poppins,sans-serif;background:radial-gradient(circle at 15% 10%,#3a1668,transparent 50%),radial-gradient(circle at 90% 90%,#5a1646,transparent 50%),var(--bg);background-attachment:fixed;color:var(--text);min-height:100vh}
+a{color:inherit;text-decoration:none}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 6%}
+.logo{font-family:'Playfair Display',serif;font-weight:900;font-size:1.15rem}.logo span{color:var(--gold)}
+header nav{display:flex;gap:20px;font-size:.9rem;color:var(--mute)}header nav a:hover{color:var(--text)}
+main{max-width:640px;margin:auto;padding:30px 6% 80px}
+h1{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,5vw,2.5rem);margin-bottom:8px}
+.hint{color:var(--mute);margin-bottom:22px;font-size:.95rem}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:26px}
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab{flex:1;padding:10px;border-radius:30px;border:1.5px solid var(--line);background:var(--glass);color:var(--text);font:inherit;cursor:pointer}
+.tab.sel{background:var(--pink);border-color:var(--pink)}
+input{width:100%;background:var(--glass);border:1.5px solid var(--line);border-radius:14px;padding:14px 18px;color:var(--text);font:inherit;outline:none;margin-bottom:12px}
+input:focus{border-color:var(--pink);box-shadow:0 0 20px rgba(255,77,141,.3)}
+.btn{display:inline-block;padding:12px 26px;border-radius:50px;border:0;font:inherit;font-weight:600;cursor:pointer;transition:.3s;color:#fff}
+.main{background:linear-gradient(135deg,var(--pink),#ff8a4d);box-shadow:0 0 22px rgba(255,77,141,.45)}.main:hover:not(:disabled){transform:scale(1.04)}
+.ghost{background:var(--glass);border:1.5px solid var(--line)}.ghost:hover:not(:disabled){border-color:var(--cyan)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.sm{padding:8px 16px;font-size:.82rem}
+.err{color:var(--gold);font-size:.88rem;min-height:22px;margin:4px 0 10px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.w{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+.w h3{font-size:1.05rem;margin-bottom:2px}.w small{color:var(--mute)}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.b{font-size:.75rem;padding:4px 12px;border-radius:20px;border:1px solid var(--line)}
+.on{background:rgba(60,220,140,.18);border-color:#3cdc8c;color:#9dffcc}.off{background:rgba(255,255,255,.08);color:var(--mute)}.bad{background:rgba(255,80,80,.18);border-color:#ff5050;color:#ffb0b0}.op{background:rgba(92,225,230,.15);border-color:var(--cyan);color:var(--cyan)}
+.w .lk{font-size:.78rem;color:var(--mute);word-break:break-all;margin-bottom:10px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><a href="index.html" class="logo">The Wisher’s <span>Wish</span></a><nav><a href="index.html">Home</a><a href="create.html">Create wish</a></nav></header>
+<main>
+  <section id="auth" hidden>
+    <h1>Login or sign up</h1><p class="hint">Get short links, see if your wish was opened, and switch any link off anytime.</p>
+    <div class="card">
+      <div class="tabs"><button class="tab sel" id="tIn">Login</button><button class="tab" id="tUp">Sign up</button></div>
+      <input id="em" type="email" placeholder="Email" autocomplete="email">
+      <input id="pw" type="password" placeholder="Password (at least 6 characters)" autocomplete="current-password">
+      <p class="err" id="er"></p>
+      <button class="btn main" id="go">Login</button>
+    </div>
+    <p class="hint" style="margin-top:18px;text-align:center"><a href="create.html" style="color:var(--cyan)">Continue without login</a></p>
+  </section>
+  <section id="dash" hidden>
+    <div class="top"><div><h1>My wishes</h1><p class="hint" id="who" style="margin:0"></p></div><div class="acts"><a class="btn main sm" href="create.html">+ New wish</a><button class="btn ghost sm" id="out">Logout</button></div></div>
+    <p class="err" id="de"></p>
+    <div id="list"></div>
+    <p class="hint" id="empty" hidden>No saved wishes yet. Create one while you are logged in and it will show up here.</p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
+<script>
+// your Supabase project (these two are safe to keep in the website)
+const SB_URL='https://thzgyqgybahbnbkdqexd.supabase.co';
+const SB_KEY='sb_publishable_54JjRffHZ9yv7J5eIaX5Gg_etJgfKvn';
+const $=id=>document.getElementById(id);
+let sb,mode='in';
+try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){}
+const next=new URLSearchParams(location.search).get('next');
+
+async function init(){
+  if(!sb){show('auth');$('er').textContent='Could not load the login system. Check your internet and refresh.';return}
+  const {data}=await sb.auth.getSession();
+  data.session?dash(data.session):show('auth');
+}
+function show(w){$('auth').hidden=w!=='auth';$('dash').hidden=w!=='dash'}
+function setMode(m){mode=m;$('tIn').classList.toggle('sel',m==='in');$('tUp').classList.toggle('sel',m==='up');$('go').textContent=m==='in'?'Login':'Create account';$('pw').autocomplete=m==='in'?'current-password':'new-password';$('er').textContent=''}
+$('tIn').onclick=()=>setMode('in');$('tUp').onclick=()=>setMode('up');
+
+async function submit(){
+  const email=$('em').value.trim(),password=$('pw').value;$('er').textContent='';
+  if(!email||password.length<6){$('er').textContent='Enter your email and a password of at least 6 characters.';return}
+  $('go').disabled=true;
+  try{
+    const r=mode==='in'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
+    if(r.error)$('er').textContent=r.error.message;
+    else if(!r.data.session)$('er').textContent='Account created. Check your email to confirm it, then login.';
+    else if(next==='create')location.href='create.html';
+    else dash(r.data.session);
+  }catch(e){$('er').textContent='Something went wrong. Please try again.'}
+  $('go').disabled=false;
+}
+$('go').onclick=submit;
+[$('em'),$('pw')].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')submit()}));
+$('out').onclick=async()=>{await sb.auth.signOut();show('auth')};
+
+// ---- dashboard ----
+async function dash(session){
+  show('dash');$('who').textContent=session.user.email;await load();
+}
+const fmt=t=>new Date(t).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+function badge(t,c){const s=document.createElement('span');s.className='b '+c;s.textContent=t;return s}
+function btn(t,cls,fn){const b=document.createElement('button');b.className='btn ghost sm '+cls;b.textContent=t;b.onclick=fn;return b}
+async function load(){
+  $('de').textContent='';const box=$('list');box.innerHTML='';
+  const r=await sb.from('wishes').select('id,data,enabled,disabled_by_admin,views,opened_at,created_at').order('created_at',{ascending:false});
+  if(r.error){$('de').textContent='Could not load your wishes: '+r.error.message;return}
+  $('empty').hidden=r.data.length>0;
+  r.data.forEach(w=>{
+    const url=new URL('wish.html?w='+w.id,location.href).href,d=w.data||{};
+    const c=document.createElement('div');c.className='w';
+    const h=document.createElement('h3');h.textContent='For '+(d.to||'someone');
+    const s=document.createElement('small');s.textContent=(d.fr?'From '+d.fr+' · ':'')+'Created '+fmt(w.created_at);
+    const bs=document.createElement('div');bs.className='badges';
+    if(w.disabled_by_admin)bs.appendChild(badge('Switched off by admin','bad'));
+    else bs.appendChild(w.enabled?badge('Link is ON','on'):badge('Link is OFF','off'));
+    bs.appendChild(w.views>0?badge('Opened · '+w.views+' view'+(w.views>1?'s':'')+' · first '+fmt(w.opened_at),'op'):badge('Not opened yet','off'));
+    const lk=document.createElement('div');lk.className='lk';lk.textContent=url;
+    const a=document.createElement('div');a.className='acts';
+    a.appendChild(btn('Copy link','',async e=>{try{await navigator.clipboard.writeText(url);e.target.textContent='Copied ✓'}catch(x){prompt('Copy this link:',url)}}));
+    const open=document.createElement('a');open.className='btn ghost sm';open.textContent='Open';open.href=url;open.target='_blank';a.appendChild(open);
+    const t=btn(w.enabled?'Turn off':'Turn on','',async()=>{t.disabled=true;const x=await sb.rpc('set_wish_enabled',{wid:w.id,val:!w.enabled});if(x.error)$('de').textContent=x.error.message;await load()});
+    t.disabled=w.disabled_by_admin;a.appendChild(t);
+    a.appendChild(btn('Delete','',async()=>{if(!confirm('Delete this wish for good? The link will stop working.'))return;const x=await sb.from('wishes').delete().eq('id',w.id);if(x.error)$('de').textContent=x.error.message;await load()}));
+    [h,s,bs,lk,a].forEach(n=>c.appendChild(n));box.appendChild(c);
+  });
+}
+init();
+</script>
+</body>
+</html>
