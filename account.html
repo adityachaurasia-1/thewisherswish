@@ -44,6 +44,7 @@ input:focus{border-color:var(--pink);box-shadow:0 0 20px rgba(255,77,141,.3)}
 <main>
   <section id="auth" hidden>
     <h1>Login or sign up</h1><p class="hint">Get short links, see if your wish was opened, and switch any link off anytime.</p>
+    <div class="card" id="gn" hidden style="margin-bottom:16px;border-color:var(--cyan)"><p id="gnt" style="font-size:.9rem"></p></div>
     <div class="card">
       <div class="tabs"><button class="tab sel" id="tIn">Login</button><button class="tab" id="tUp">Sign up</button></div>
       <input id="em" type="email" placeholder="Email" autocomplete="email">
@@ -74,8 +75,13 @@ const next=new URLSearchParams(location.search).get('next');
 
 async function init(){
   if(!sb){show('auth');$('er').textContent='Could not load the login system. Check your internet and refresh.';return}
-  const {data}=await sb.auth.getSession();
-  data.session?dash(data.session):show('auth');
+  const {data}=await sb.auth.getSession(),s=data.session;
+  if(s&&!s.user.is_anonymous)dash(s);else{show('auth');if(s)guestNote()}
+}
+// a guest (quiet account made when creating a wish) sees how many guest wishes they have
+async function guestNote(){
+  const r=await sb.from('wishes').select('id'),n=r.data?r.data.length:0;
+  if(n){$('gn').hidden=false;$('gnt').textContent='You have '+n+' guest wish'+(n>1?'es':'')+' made in this browser. Use Sign up (not Login) to keep '+(n>1?'them':'it')+' and manage '+(n>1?'them':'it')+' here. If you already have an account, Login works too, but these guest wishes will stay unmanaged.'}
 }
 function show(w){$('auth').hidden=w!=='auth';$('dash').hidden=w!=='dash'}
 function setMode(m){mode=m;$('tIn').classList.toggle('sel',m==='in');$('tUp').classList.toggle('sel',m==='up');$('go').textContent=m==='in'?'Login':'Create account';$('pw').autocomplete=m==='in'?'current-password':'new-password';$('er').textContent=''}
@@ -86,11 +92,20 @@ async function submit(){
   if(!email||password.length<6){$('er').textContent='Enter your email and a password of at least 6 characters.';return}
   $('go').disabled=true;
   try{
-    const r=mode==='in'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
-    if(r.error)$('er').textContent=r.error.message;
-    else if(!r.data.session)$('er').textContent='Account created. Check your email to confirm it, then login.';
-    else if(next==='create')location.href='create.html';
-    else dash(r.data.session);
+    const cur=(await sb.auth.getSession()).data.session,guest=cur&&cur.user.is_anonymous;
+    if(mode==='up'&&guest){   // turn the guest account into a real one, the guest wishes come along
+      const r=await sb.auth.updateUser({email,password});
+      if(r.error)$('er').textContent=r.error.message;
+      else{const s2=(await sb.auth.getSession()).data.session;
+        if(s2&&!s2.user.is_anonymous){if(next==='create')location.href='create.html';else dash(s2)}
+        else $('er').textContent='Almost done. Check your email to confirm it, then login.'}
+    }else{
+      const r=mode==='in'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
+      if(r.error)$('er').textContent=r.error.message;
+      else if(!r.data.session)$('er').textContent='Account created. Check your email to confirm it, then login.';
+      else if(next==='create')location.href='create.html';
+      else dash(r.data.session);
+    }
   }catch(e){$('er').textContent='Something went wrong. Please try again.'}
   $('go').disabled=false;
 }
