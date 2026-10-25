@@ -198,8 +198,8 @@ const DEMOS=[
   if(!q){DEMOS.forEach(d=>{const b=document.createElement('button');b.className='btn ghost';b.textContent=d[0];b.onclick=()=>begin(clean(d[1]),true);$('dm').appendChild(b)});return show('demo')}
   try{
     const d=clean(await decode(q));
-    // old-style links: only the global kill switch applies (if the check fails, the wish still opens)
-    try{const r=await sb().rpc('links_enabled');if(r.data===false)return show('off')}catch(e){}
+    // long links: the server checks the kill switch and when the link was made (if the check fails, the wish still opens)
+    try{const r=await sb().rpc('link_status',{ts:d.ts||null});if(r.data&&r.data!=='ok')return show('off')}catch(e){}
     begin(d);
   }catch(e){show('bad')}
 })();
