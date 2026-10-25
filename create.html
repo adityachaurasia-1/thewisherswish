@@ -61,7 +61,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(18,10,36,.88);back
 </style>
 </head>
 <body>
-<header><a href="index.html" class="logo">The Wisher’s <span>Wish</span></a><a href="index.html" class="x">Close ✕</a></header>
+<header><a href="index.html" class="logo">The Wisher’s <span>Wish</span></a><span style="display:flex;gap:18px"><a href="account.html" class="x" id="acc">Login</a><a href="index.html" class="x">Close ✕</a></span></header>
 <div id="bar"><i id="bi"></i></div>
 <canvas id="fx"></canvas>
 <main>
@@ -95,6 +95,8 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(18,10,36,.88);back
   <div class="step" data-s="code"><h1>Add a secret code?</h1><p class="hint">Optional. Only someone who knows the code can open the wish. Tell them the code yourself.</p><input id="code" placeholder="Secret code (leave empty to skip)" maxlength="20"></div>
   <div class="step" data-s="open"><h1>When should it open?</h1><p class="hint">Optional. Before this time they will only see a countdown.</p><input type="datetime-local" id="open"><p class="err" id="oerr"></p></div>
   <div class="step res" data-s="result"><span class="big">🎉</span><h1>Your wish is ready!</h1><p class="hint">Share this link. Every wish gets its own link.</p>
+    <div id="gb" class="auto" style="display:none;margin:0 0 18px"><b>Want to switch this link off later?</b><p class="hint" style="margin:8px 0 14px">This wish is saved with a short link. Sign up (free) in this browser to see if it was opened and to turn it off anytime. The wish moves to your account.</p>
+      <a class="btn main" href="account.html" target="_blank" rel="noopener">Sign up / Login</a></div>
     <div class="linkbox"><input id="lnk" readonly><button class="btn main" id="cp">Copy</button></div>
     <div class="acts"><a class="btn main" id="wa" target="_blank" rel="noopener">Share on WhatsApp</a><a class="btn ghost" id="pr" target="_blank">Preview</a></div>
     <div id="qr"></div><div><button class="btn ghost" id="dq">Download QR</button></div>
@@ -103,8 +105,14 @@ footer{position:fixed;bottom:0;left:0;right:0;background:rgba(18,10,36,.88);back
 <footer><div id="pv"></div><div class="nav"><button class="btn ghost" id="back">Back</button><button class="btn main" id="next">Next</button></div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"></script>
 <script>
 const $=id=>document.getElementById(id);
+// your Supabase project (safe to keep in the website)
+const SB_URL='https://thzgyqgybahbnbkdqexd.supabase.co',SB_KEY='sb_publishable_54JjRffHZ9yv7J5eIaX5Gg_etJgfKvn';
+let _sb;function sbc(){if(!_sb)_sb=supabase.createClient(SB_URL,SB_KEY);return _sb}
+async function getSes(){try{return (await sbc().auth.getSession()).data.session}catch(e){return null}}
+getSes().then(x=>{if(x&&!x.user.is_anonymous)$('acc').textContent='My wishes'});
 const OF=[['birthday','🎂','Birthday','Happy Birthday'],['anniversary','💍','Anniversary','Happy Anniversary'],['rakhi','🧵','Raksha Bandhan','Happy Raksha Bandhan'],['sibling','🤗','Sibling','Hey, favourite sibling!'],['friend','🤝','Friend','Hey, dost!'],['custom','✍️','Custom','']];
 const OP=[['diwali','🪔','Diwali','Happy Diwali'],['independence','🇮🇳','Independence Day','Happy Independence Day'],['republic','🇮🇳','Republic Day','Happy Republic Day'],['holi','🎨','Holi','Happy Holi'],['eid','🌙','Eid','Eid Mubarak'],['christmas','🎄','Christmas','Merry Christmas'],['newyear','🎆','New Year','Happy New Year'],['teachers','📚','Teachers’ Day','Happy Teachers’ Day'],['custom','✍️','Custom','']];
 const ACT={birthday:'Ab ek chhoti si wish ho jaaye…',anniversary:'Teen dil roshan karo',rakhi:'Rakhi ke teen dhaage baandho',sibling:'Teen sitare jagao',friend:'Teen gubbare phodo',diwali:'Teen diye jalao',independence:'Tiranga lehrao',republic:'Tiranga lehrao',holi:'Rang bikhero',eid:'Lanterns roshan karo',christmas:'Sitare jagao',newyear:'Aatishbazi shuru karo'};
@@ -213,7 +221,7 @@ function render(){
 // ---- build the link: compact JSON, compressed when the browser supports it ----
 const hash=s=>{let x=5381;for(const c of s)x=(x*33^c.charCodeAt(0))>>>0;return x.toString(36)};
 const b64u=b=>{let s='';b.forEach(c=>s+=String.fromCharCode(c));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
-async function buildLink(){
+function buildPayload(){
   const d={g:S.g,o:S.o,to:S.to.trim(),fr:S.from.trim(),t:S.theme,a:S.anim,m:S.msg.trim(),f:S.font};
   if(S.o==='custom'){d.h=S.custom.trim();d.e='🎉'}
   if(S.g==='f'&&S.w!=='n')d.w=S.w;
@@ -223,15 +231,40 @@ async function buildLink(){
   if(Object.keys(x).length)d.x=x;
   if(S.code.trim())d.c=hash(S.code.trim());
   if(S.open)d.u=new Date(S.open).getTime();
+  return d;
+}
+async function buildLink(d){
   const bytes=new TextEncoder().encode(JSON.stringify(d));let tag='j',out=bytes;
   try{if(window.CompressionStream){const z=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());if(z.length<bytes.length){tag='z';out=z}}}catch(e){}
   return new URL('wish.html?d='+tag+b64u(out),location.href).href;
 }
-async function finish(){
-  const url=await buildLink();$('lnk').value=url;$('pr').href=url;$('len').textContent='Link length: '+url.length+' characters';
+let PAY=null;
+function showLink(url,saved,guest){
+  $('lnk').value=url;$('pr').href=url;
+  $('len').textContent=saved?(guest?'Short link. Saved on our server.':'Saved to your account. You can switch this link off anytime in My wishes.'):'Link length: '+url.length+' characters. This normal link cannot be switched off one by one.';
+  $('gb').style.display=(saved&&guest)?'block':'none';
   $('wa').href='https://wa.me/?text='+encodeURIComponent(`🎁 ${S.from.trim()} has sent you a special wish! Open it here: ${url}`+(S.code?`\n(You will need the secret code)`:''));
   $('qr').innerHTML='';$('qr').style.display='inline-block';$('dq').style.display='';$('qe').textContent='';
   try{new QRCode($('qr'),{text:url,width:200,height:200,correctLevel:QRCode.CorrectLevel.L})}catch(e){$('qr').style.display='none';$('dq').style.display='none';$('qe').textContent='This wish is too long for a QR code. Use shorter texts to get a QR.'}
+}
+// everyone gets a saved wish with a short link. No login? We quietly give a guest account.
+async function finish(){
+  PAY=buildPayload();
+  let ses=await getSes();
+  if(!ses){try{const r=await sbc().auth.signInAnonymously();if(r.error)throw r.error;ses=r.data.session}catch(e){ses=null}}
+  let ok=false,why='';
+  if(ses){
+    try{
+      const r=await sbc().from('wishes').insert({user_id:ses.user.id,data:PAY}).select('id').single();
+      if(r.error)throw r.error;
+      showLink(new URL('wish.html?w='+r.data.id,location.href).href,true,!!ses.user.is_anonymous);ok=true;
+    }catch(e){why=e.message||'error'}
+  }
+  if(!ok){ // backup: the normal long link (still works, stamped with the server time for the kill switch)
+    try{const t=await sbc().rpc('server_time_ms');PAY.ts=typeof t.data==='number'?t.data:Date.now()}catch(e){PAY.ts=Date.now()}
+    showLink(await buildLink(PAY),false,false);
+    $('qe').textContent=ses?'Could not save the short link ('+why+'), so here is the normal link.':'Could not create a short link right now, so here is the normal link.';
+  }
   burst();
 }
 $('next').onclick=async()=>{if(!valid())return;si++;enter();render();if(cur()==='result')await finish();scrollTo(0,0);
