@@ -68,7 +68,7 @@ input:focus{border-color:var(--pink)}
 const SB_URL='https://thzgyqgybahbnbkdqexd.supabase.co';
 const SB_KEY='sb_publishable_54JjRffHZ9yv7J5eIaX5Gg_etJgfKvn';
 const $=id=>document.getElementById(id);
-let sb,USERS=[],WISHES=[],LINKS_ON=true;
+let sb,USERS=[],WISHES=[],LINKS_ON=true,REV=0;
 try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){}
 const fmt=t=>t?new Date(t).toLocaleString([], {dateStyle:'medium',timeStyle:'short'}):'-';
 function show(w){['login','deny','app'].forEach(x=>$(x).hidden=x!==w);$('out').hidden=w==='login'}
@@ -102,10 +102,10 @@ async function refresh(){
     sb.from('profiles').select('id,email,is_admin,is_blocked,created_at').order('created_at',{ascending:false}),
     sb.from('wishes').select('id,user_id,data,enabled,disabled_by_admin,views,opened_at,created_at').order('created_at',{ascending:false}).limit(500)]);
   if(us.error||ws.error||st.error){err('Could not load data: '+((us.error||ws.error||st.error).message));return}
-  LINKS_ON=!(st.data&&st.data.value&&st.data.value.enabled===false);USERS=us.data;WISHES=ws.data;
+  LINKS_ON=!(st.data&&st.data.value&&st.data.value.enabled===false);REV=(st.data&&st.data.value&&st.data.value.revoked_before_ms)||0;USERS=us.data;WISHES=ws.data;
   drawOverview();drawWishes();drawUsers();
 }
-const owner=id=>(USERS.find(u=>u.id===id)||{}).email||'unknown';
+const owner=id=>{const u=USERS.find(u=>u.id===id);return u?(u.email||'Guest account'):'unknown'};
 
 // ---- overview + the kill switch ----
 function drawOverview(){
@@ -113,16 +113,18 @@ function drawOverview(){
   const live=WISHES.filter(w=>w.enabled&&!w.disabled_by_admin).length,views=WISHES.reduce((n,w)=>n+w.views,0);
   [[USERS.length,'Users'],[WISHES.length,'Saved wishes'],[live,'Links ON'],[views,'Total views']].forEach(([n,l])=>{const s=el('div','stat');s.appendChild(el('b','',n));s.appendChild(el('small','',l));box.appendChild(s)});
   $('kill').classList.toggle('off',!LINKS_ON);
+  const since=REV?' Links made before '+fmt(REV)+' are dead for good.':'';
   $('kt').textContent=LINKS_ON?'All links are ON':'ALL LINKS ARE OFF';
-  $('kd').textContent=LINKS_ON?'Anyone with a link can open their wish.':'Every wish link, old and new, now shows only “Create a wishing web page”.';
-  $('kb').textContent=LINKS_ON?'Switch OFF all links':'Switch ON all links';
+  $('kd').textContent=LINKS_ON?'Anyone with a link can open their wish.'+since:'Every link now shows only “Create a wishing web page”. When you switch back ON, links made before this moment stay dead and only new links work.';
+  $('kb').textContent=LINKS_ON?'Switch OFF all links':'Switch back ON (old links stay dead)';
   $('kb').className='btn '+(LINKS_ON?'danger':'main');
 }
 $('kb').onclick=async()=>{
   const turnOff=LINKS_ON;
-  if(!confirm(turnOff?'Switch OFF every wish link on the website? Nobody will be able to open any wish until you switch it back ON.':'Switch all links back ON?'))return;
-  const r=await sb.from('settings').update({value:{enabled:!turnOff}}).eq('key','all_links');
-  if(r.error)err(r.error.message);await refresh();
+  if(!confirm(turnOff?'Switch OFF all links?\n\nEvery link made up to this moment will be DEAD FOR GOOD. When you switch the website back ON, only links made after that will work.':'Switch the website back ON?\n\nThe old links stay dead. Only new links will work.'))return;
+  const r=await sb.rpc('admin_set_links',{val:!turnOff});
+  if(r.error)err(r.error.message+' (Did you run supabase_update_2.sql in Supabase?)');
+  await refresh();
 };
 
 // ---- wishes ----
@@ -152,7 +154,7 @@ function drawUsers(){
   const box=$('ul');box.innerHTML='';
   USERS.forEach(u=>{
     const n=WISHES.filter(w=>w.user_id===u.id).length,c=el('div','row');
-    c.appendChild(el('h3','',u.email||'(no email)'));c.appendChild(el('small','','Joined '+fmt(u.created_at)+' · '+n+' wish'+(n===1?'':'es')));
+    c.appendChild(el('h3','',u.email||'Guest account (no email)'));c.appendChild(el('small','','Joined '+fmt(u.created_at)+' · '+n+' wish'+(n===1?'':'es')));
     const bs=el('div','badges');if(u.is_admin)bs.appendChild(badge('Admin','op'));bs.appendChild(u.is_blocked?badge('Blocked','bad'):badge('Active','on'));c.appendChild(bs);
     const b=btn(u.is_blocked?'Unblock user':'Block user','ghost',async()=>{
       if(!u.is_blocked&&!confirm('Block '+u.email+'? Their saved links will stop working and they cannot save new wishes.'))return;
