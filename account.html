@@ -26,6 +26,8 @@ input:focus{border-color:var(--pink);box-shadow:0 0 20px rgba(255,77,141,.3)}
 .main{background:linear-gradient(135deg,var(--pink),#ff8a4d);box-shadow:0 0 22px rgba(255,77,141,.45)}.main:hover:not(:disabled){transform:scale(1.04)}
 .ghost{background:var(--glass);border:1.5px solid var(--line)}.ghost:hover:not(:disabled){border-color:var(--cyan)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
+.gbtn{width:100%;background:#fff;color:#222;display:flex;align-items:center;justify-content:center;gap:10px;font-size:.95rem}.gbtn:hover{transform:scale(1.02)}
+.or{text-align:center;color:var(--mute);font-size:.8rem;margin:14px 0}
 .sm{padding:8px 16px;font-size:.82rem}
 .err{color:var(--gold);font-size:.88rem;min-height:22px;margin:4px 0 10px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
@@ -46,6 +48,8 @@ input:focus{border-color:var(--pink);box-shadow:0 0 20px rgba(255,77,141,.3)}
     <h1>Login or sign up</h1><p class="hint">Get short links, see if your wish was opened, and switch any link off anytime.</p>
     <div class="card" id="gn" hidden style="margin-bottom:16px;border-color:var(--cyan)"><p id="gnt" style="font-size:.9rem"></p></div>
     <div class="card">
+      <button class="btn gbtn" id="gg"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continue with Google</button>
+      <p class="or">or use your email</p>
       <div class="tabs"><button class="tab sel" id="tIn">Login</button><button class="tab" id="tUp">Sign up</button></div>
       <input id="em" type="email" placeholder="Email" autocomplete="email">
       <input id="pw" type="password" placeholder="Password (at least 6 characters)" autocomplete="current-password">
@@ -55,7 +59,7 @@ input:focus{border-color:var(--pink);box-shadow:0 0 20px rgba(255,77,141,.3)}
     <p class="hint" style="margin-top:18px;text-align:center"><a href="create.html" style="color:var(--cyan)">Continue without login</a></p>
   </section>
   <section id="dash" hidden>
-    <div class="top"><div><h1>My wishes</h1><p class="hint" id="who" style="margin:0"></p></div><div class="acts"><a class="btn main sm" href="create.html">+ New wish</a><a class="btn ghost sm" id="adm" href="admin.html" hidden>Admin panel</a><button class="btn ghost sm" id="out">Logout</button></div></div>
+    <div class="top"><div><h1>Dashboard</h1><p class="hint" id="who" style="margin:0"></p></div><div class="acts"><a class="btn main sm" href="create.html">+ New wish</a><a class="btn ghost sm" id="adm" href="admin.html" hidden>Admin panel</a><button class="btn ghost sm" id="out">Logout</button></div></div>
     <p class="err" id="de"></p>
     <div id="list"></div>
     <p class="hint" id="empty" hidden>No saved wishes yet. Create one while you are logged in and it will show up here.</p>
@@ -76,7 +80,9 @@ const next=new URLSearchParams(location.search).get('next');
 async function init(){
   if(!sb){show('auth');$('er').textContent='Could not load the login system. Check your internet and refresh.';return}
   const {data}=await sb.auth.getSession(),s=data.session;
-  if(s&&!s.user.is_anonymous)dash(s);else{show('auth');if(s)guestNote()}
+  let back='';try{back=sessionStorage.getItem('wish_next')||'';sessionStorage.removeItem('wish_next')}catch(e){}
+  if(s&&!s.user.is_anonymous){if(back==='create'){location.href='create.html';return}dash(s)}
+  else{show('auth');if(s)guestNote()}
 }
 // a guest (quiet account made when creating a wish) sees how many guest wishes they have
 async function guestNote(){
@@ -111,6 +117,20 @@ async function submit(){
 }
 $('go').onclick=submit;
 [$('em'),$('pw')].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')submit()}));
+// Google login. A guest is linked to Google so the guest wishes move into the account.
+$('gg').onclick=async()=>{
+  $('er').textContent='';if(!sb)return;
+  const redirectTo=new URL('account.html',location.href).href;
+  try{sessionStorage.setItem('wish_next',next||'')}catch(e){}
+  const cur=(await sb.auth.getSession()).data.session;
+  if(cur&&cur.user.is_anonymous){
+    const r=await sb.auth.linkIdentity({provider:'google',options:{redirectTo}});
+    if(!r.error)return;
+    if(!confirm('Could not move your guest wishes to Google ('+r.error.message+').\n\nContinue with Google anyway? Your guest wishes will keep working but stay unmanaged.'))return;
+  }
+  const r2=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
+  if(r2.error)$('er').textContent=r2.error.message;
+};
 $('out').onclick=async()=>{await sb.auth.signOut();show('auth')};
 
 // ---- dashboard ----
